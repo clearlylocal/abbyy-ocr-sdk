@@ -1,0 +1,18 @@
+﻿                                Credit Card Bill                                               
+                                                                                               
+                                                                                               
+This is a bill in which you have to pay. If you Co not pay within one (1)                      
+month, a $250,00 fine is assessed.                                                             
+                                                                                               
+Mame: John Phillips                        Phone: (123) 456-7890                               
+Address 123 Main Street CC Number: XXXXXXXXXXXX1 234                                           
+San Francisco. CA12345                 Bill Received: 01/16/1968                               
+Your Transactions                                                                              
+                                                                                               
+Item                                                                                     Price
+                                                                                               
+The ABC Store - Cookies                                               $2.81                    
+Orville’s Bakery - Donuts                                             $5.95                    
+Stan's Gas Station -10 Gallons of Gas                                         $40.00           
+                                                                                               
+                                                                              Total: $48.76    
