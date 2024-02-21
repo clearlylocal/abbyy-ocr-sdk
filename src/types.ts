@@ -1,15 +1,3 @@
-export type TaskData = {
-	id: string
-	status: TaskStatus
-	resultUrl?: string
-	error?: string
-}
-
-export type CompletedTaskData = TaskData & {
-	status: 'Completed'
-	resultUrl: string
-}
-
 export type OcrSdkOptions = {
 	waitTimeout: number
 }
@@ -18,6 +6,30 @@ export type ImageProcessingSettings = {
 	languages: Language[]
 	exportFormat: ExportFormat
 }
+
+export type Task = {
+	id: string
+	status: TaskStatus
+	resultUrl?: string
+	resultUrls?: string[]
+	error?: string
+	registrationTime?: Date
+	statusChangeTime?: Date
+	filesCount?: number
+	credits?: number
+}
+
+export type CompletedTask = Expand<
+	Task & Required<Pick<Task, 'resultUrl' | 'resultUrls'>> & {
+		status: CompletedTaskStatus
+	}
+>
+
+export type OngoingTask = Expand<
+	Omit<Task, 'resultUrl' | 'resultUrls'> & {
+		status: OngoingTaskStatus
+	}
+>
 
 export const taskStatuses = [
 	'Submitted',
@@ -28,11 +40,15 @@ export const taskStatuses = [
 	'Deleted',
 	'NotEnoughCredits',
 ] as const
+export const completedTaskStatuses = ['Completed'] satisfies TaskStatus[]
+export const ongoingTaskStatuses = ['Queued', 'InProgress'] satisfies TaskStatus[]
 
 // https://support.abbyy.com/hc/en-us/articles/360017269940-Task-statuses
 export type TaskStatus = typeof taskStatuses[number]
+export type CompletedTaskStatus = typeof completedTaskStatuses[number]
+export type OngoingTaskStatus = typeof ongoingTaskStatuses[number]
 
-// https://support.abbyy.com/hc/en-us/articles/360017326479-processImage-Method
+// https://support.abbyy.com/hc/en-us/articles/360017269680-processImage-Method
 export type ExportFormat =
 	| 'txt'
 	| 'txtUnstructured'
@@ -244,3 +260,6 @@ export type Language =
 	| 'Yiddish'
 	| 'Zapotec'
 	| 'Zulu'
+
+// utility for more user-friendly intellisense
+type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never

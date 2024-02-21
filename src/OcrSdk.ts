@@ -1,6 +1,9 @@
-import { load } from 'cheerio'
+import { completedTaskStatuses } from './types.ts'
+import { ongoingTaskStatuses } from './types.ts'
+import { OngoingTaskStatus } from './types.ts'
+import { CompletedTaskStatus } from './types.ts'
 import { taskStatuses } from './types.ts'
-import type { CompletedTaskData, ImageProcessingSettings, OcrSdkOptions, TaskData } from './types.ts'
+import type { CompletedTask, ImageProcessingSettings, OcrSdkOptions, OngoingTask, Task } from './types.ts'
 
 const defaultOptions: OcrSdkOptions = {
 	waitTimeout: 2000,
@@ -11,23 +14,44 @@ const defaultImageProcessingSettings: ImageProcessingSettings = {
 	exportFormat: 'txt',
 }
 
+type GetTaskParams = [
+	method: 'GET' | 'POST',
+	urlPath: string,
+	queryParams?: Record<string, string>,
+	body?: BodyInit | null | undefined,
+]
+
 export class OcrSdk {
-	options: OcrSdkOptions
+	public options: OcrSdkOptions
+
+	#applicationId: string
+	#password: string
+	#serviceUrl: string
 
 	/**
 	 * To obtain an application ID and password, register at https://cloud.ocrsdk.com/Account/Register
 	 * More info on getting your application id and password at https://ocrsdk.com/documentation/faq/#faq3
 	 */
-	constructor(
-		private applicationId: string,
-		private password: string,
-		private serviceUrl: string,
-		options?: Partial<OcrSdkOptions>,
-	) {
-		this.options = {
-			...defaultOptions,
-			...options,
-		}
+	constructor(applicationId: string, password: string, serviceUrl: string, options?: Partial<OcrSdkOptions>) {
+		this.options = { ...defaultOptions, ...options }
+
+		this.#applicationId = applicationId
+		this.#password = password
+		this.#serviceUrl = serviceUrl
+	}
+
+	/**
+	 * OCR an image via the ABBYY Cloud OCR API
+	 *
+	 * @param image Binary data of image to be processed
+	 * @param settings Settings for processing the image
+	 *
+	 * @returns Binary data of the output file, in the format specified by `settings.exportFormat` (default: `txt`)
+	 */
+	async ocr(image: Uint8Array, settings?: Partial<ImageProcessingSettings>) {
+		const task = await this.#initOcrTask(image, settings)
+		const result = await this.#waitForCompletion(task)
+		return this.#getResult(result)
 	}
 
 	/**
@@ -35,151 +59,115 @@ export class OcrSdk {
 	 *
 	 * @param image Binary data of image to be processed
 	 * @param settings Image processing settings
+	 * @returns Queued task
 	 */
-	processImage(image: Uint8Array, settings?: Partial<ImageProcessingSettings>) {
-		const { languages, ...otherSettings } = {
-			...defaultImageProcessingSettings,
-			...settings,
-		}
-		const params = {
-			...otherSettings,
-			language: languages.join(','),
-		}
+	#initOcrTask(image: Uint8Array, settings?: Partial<ImageProcessingSettings>) {
+		const { languages, ...otherSettings } = { ...defaultImageProcessingSettings, ...settings }
+		const params = { ...otherSettings, language: languages.join(',') }
 
-		return this.#createTaskRequest(
-			'POST',
-			'/processImage',
-			params,
-			image,
-		)
+		return this.#getTaskFromEndpoint('POST', 'processImage', params, image)
 	}
 
 	/**
 	 * Get current task status.
-	 *
-	 * @param taskId Identifier as returned in `taskData.id`
+	 * @param task Task in any status
+	 * @returns Task with updated status
 	 */
-	getTaskStatus(taskId: string) {
-		return this.#createTaskRequest(
-			'GET',
-			'/getTaskStatus',
-			{ taskId },
-		)
-	}
-
-	isTaskActive(taskData: TaskData) {
-		return taskData.status === 'Queued' || taskData.status === 'InProgress'
-	}
-
-	/** Convenience method for sending for processing, waiting until completion, then getting the result */
-	async ocr(image: Uint8Array, settings?: Partial<ImageProcessingSettings>) {
-		const taskData = await this.processImage(image, settings)
-		const resultData = await this.waitForCompletion(taskData.id)
-		return this.getResult(resultData.resultUrl)
+	#getTaskStatus(task: Task) {
+		return this.#getTaskFromEndpoint('GET', 'getTaskStatus', { taskId: task.id })
 	}
 
 	/**
 	 * Wait until task processing is finished.
 	 * You need to check task status after processing to see if you can download result.
 	 *
-	 * @param taskId Task identifier as returned in `taskData.id`
+	 * @param task Task in any status
+	 * @returns Completed task
 	 */
-	async waitForCompletion(taskId: string) {
-		// Call getTaskStatus every several seconds until task is completed.
-		// Note: it's recommended that your application waits at least 2 seconds before making the first getTaskStatus
-		// request and also between such requests for the same task. Making requests more often will not improve your
-		// application performance.
-		// Note: if your application queues several files and waits for them, it's recommended that you use
-		// `listFinishedTasks` instead (see https://ocrsdk.com/documentation/apireference/listFinishedTasks/).
-
+	async #waitForCompletion(task: Task) {
+		// Poll /getTaskStatus until task is completed.
+		// Note: it's recommended to wait at least 2000 ms as the timeout between polling requests. Making requests more
+		// often will not improve application performance.
 		while (true) {
 			await new Promise((res) => setTimeout(res, this.options.waitTimeout))
 
-			const taskData = await this.getTaskStatus(taskId)
+			task = await this.#getTaskStatus(task)
+			if (isOngoing(task)) continue
+			assertIsCompleted(task)
 
-			if (this.isTaskActive(taskData)) {
-				continue
-			}
-
-			assertIsCompleted(taskData)
-
-			return taskData
+			return task
 		}
 	}
 
-	/** Get result of document processing. Task needs to be in 'Completed' state to call this function. */
-	async getResult(resultUrl: string) {
-		const res = await fetch(resultUrl)
+	/** Get result of document processing of a completed task */
+	async #getResult(task: CompletedTask) {
+		const res = await fetch(task.resultUrl)
 		return new Uint8Array(await res.arrayBuffer())
 	}
 
-	/** Create http GET or POST request to cloud service with given path and parameters. */
-	async #createTaskRequest(
-		method: 'GET' | 'POST',
-		urlPath: string,
-		queryParams: Record<string, string>,
-		body?: BodyInit | null | undefined,
-	): Promise<TaskData> {
-		const url = new URL(urlPath, this.serviceUrl)
-		url.search = new URLSearchParams(Object.entries(queryParams)).toString()
+	#hydrateTask(obj: Record<string, unknown>) {
+		const task: Record<string, unknown> = {}
 
-		const headers = {
-			Authorization: `Basic ${btoa(`${this.applicationId}:${this.password}`)}`,
+		if (obj.taskId != null) task.id = String(obj.taskId)
+		if (obj.status != null) task.status = String(obj.status)
+		if (obj.error != null) task.error = String(obj.error)
+		if (obj.registrationTime != null) task.registrationTime = new Date(String(obj.registrationTime))
+		if (obj.statusChangeTime != null) task.statusChangeTime = new Date(String(obj.statusChangeTime))
+		if (obj.filesCount != null) task.filesCount = Number(obj.filesCount)
+		if (obj.credits != null) task.credits = Number(obj.credits)
+
+		if (Array.isArray(obj.resultUrls)) {
+			task.resultUrls = obj.resultUrls
+			task.resultUrl = obj.resultUrls[0]
 		}
 
-		const res = await fetch(url, { method, headers, body })
+		assertIsTask(task)
+
+		return task
+	}
+
+	#getUrl(urlPath: string) {
+		// https://support.abbyy.com/hc/en-us/sections/360004931659-API-v2-JSON-version
+		return new URL(['v2', urlPath].join('/'), this.#serviceUrl)
+	}
+
+	#getHttpHeaders() {
+		return {
+			Authorization: `Basic ${btoa(`${this.#applicationId}:${this.#password}`)}`,
+		}
+	}
+
+	/** Send request to the API with given method, path, parameters, and body, returning task data */
+	async #getTaskFromEndpoint(...[method, urlPath, queryParams, body]: GetTaskParams): Promise<Task> {
+		const url = this.#getUrl(urlPath)
+		url.search = new URLSearchParams(Object.entries(queryParams ?? {})).toString()
+
+		const res = await fetch(url, { method, headers: this.#getHttpHeaders(), body })
 
 		if (!res.ok) {
-			throw new Error(`API call returned status ${res.status}`)
+			throw new Error(`API call to ${urlPath} returned status ${res.status}: ${await res.text()}`)
 		}
 
-		const xml = await res.text()
-
-		const $ = load(xml, { xml: true })
-
-		const $task = $('response task')
-		const $error = $('error message')
-
-		if (!$task.length) {
-			throw new Error($error.text() ?? 'Unknown server response')
-		}
-
-		const taskData = {
-			id: $task.attr('id'),
-			status: $task.attr('status'),
-			resultUrl: $task.attr('resultUrl'),
-		} as { error?: string }
-
-		if ($error.length) {
-			taskData.error = $error.text()
-		}
-
-		assertIsTaskData(taskData)
-
-		return taskData
+		return this.#hydrateTask(await res.json())
 	}
 }
 
-function assertIsTaskData(data: unknown): asserts data is TaskData {
-	const { id, status, resultUrl, error } = data as TaskData
+function assertIsTask(data: unknown): asserts data is Task {
+	const { id, status } = data as Task
 
-	if (
-		typeof id !== 'string' ||
-		!taskStatuses.includes(status) ||
-		(resultUrl != null && typeof resultUrl !== 'string') ||
-		(error != null && typeof error !== 'string')
-	) {
+	if (typeof id !== 'string' || !taskStatuses.includes(status)) {
 		throw new TypeError(`Invalid task data: ${JSON.stringify(data)}`)
 	}
 }
 
-function assertIsCompleted(taskData: TaskData): asserts taskData is CompletedTaskData {
-	const { status, resultUrl } = taskData
+function assertIsCompleted(task: Task): asserts task is CompletedTask {
+	const { status, resultUrl, resultUrls } = task
 
-	if (
-		!resultUrl ||
-		status !== 'Completed'
-	) {
-		throw new TypeError(`Invalid completed task data: ${JSON.stringify(taskData)}`)
+	if (resultUrl == null || resultUrls == null || !completedTaskStatuses.includes(status as CompletedTaskStatus)) {
+		throw new TypeError(`Invalid completed task data: ${JSON.stringify(task)}`)
 	}
+}
+
+function isOngoing(task: Task): task is OngoingTask {
+	return ongoingTaskStatuses.includes(task.status as OngoingTaskStatus)
 }
