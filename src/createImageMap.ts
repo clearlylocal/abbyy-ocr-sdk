@@ -33,15 +33,19 @@ await Deno.writeTextFile(
 	</head>
 	<body>
 		<div class="container">
-			<img src="${imageFileName}">\n${
+			<img src="${escape(imageFileName)}">\n${
 		rects.map(({ text, rect }) => {
 			return `\t\t\t<div class="rect" style="${
-				Object.entries(rect).map(([k, v]) => `${k}: ${v}px;`).join(' ')
-			}" title="${escape(text)}"></div>`
+				Object.entries(rect).map(([k, v]) => `${k}: ${v}px;`).join('')
+			}" title="${escape(text)}">${escape(text)}</div>`
 		}).join('\n')
 	}
 		</div>
 		<style>
+			body {
+				font-family: sans-serif;
+			}
+
 			.container {
 				position: relative;
 			}
@@ -49,6 +53,7 @@ await Deno.writeTextFile(
 			.rect {
 				position: absolute;
 				outline: 3px solid red;
+				color: hsl(0 0 0 / 0.01);
 			}
 		</style>
 	</body>
