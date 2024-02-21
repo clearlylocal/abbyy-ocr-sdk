@@ -33,7 +33,7 @@ await Deno.writeTextFile(
 	</head>
 	<body>
 		<div class="container">
-			<img src="${escape(imageFileName)}">\n${
+			<img draggable="false" src="${escape(imageFileName)}">\n${
 		rects.map(({ text, rect }) => {
 			return `\t\t\t<div class="rect" style="${
 				Object.entries(rect).map(([k, v]) => `${k}: ${v}px;`).join('')
@@ -50,10 +50,16 @@ await Deno.writeTextFile(
 				position: relative;
 			}
 
+			.container img {
+				pointer-events: none;
+				user-select: none;
+			}
+
 			.rect {
 				position: absolute;
-				outline: 3px solid red;
-				color: hsl(0 0 0 / 0.01);
+				outline: 3px solid hsl(0deg 100% 50%);
+				color: hsl(0deg 0% 0% / 0.01);
+				white-space: pre-wrap;
 			}
 		</style>
 	</body>
@@ -89,7 +95,7 @@ function getTextData($x: Cheerio<Element>, $: CheerioAPI) {
 	const text = [...$x.find('charParams')]
 		.map((c) => {
 			const $c = $(c)
-			if ($c.attr('isTab')) return '\n'
+			if ($c.attr('isTab')) return '\t'.repeat(3)
 
 			return $c.text()
 		})

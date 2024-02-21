@@ -6,30 +6,18 @@
 	</head>
 	<body>
 		<div class="container">
-			<img src="ocr-sample.jpg">
+			<img draggable="false" src="ocr-sample.jpg">
 			<div class="rect" style="left: 133px;top: 45px;width: 279px;height: 32px;" title="Credit Card Bill">Credit Card Bill</div>
 			<div class="rect" style="left: 28px;top: 104px;width: 491px;height: 19px;" title="This is a bill in which you have to pay. If you do not pay within one (1)">This is a bill in which you have to pay. If you do not pay within one (1)</div>
 			<div class="rect" style="left: 28px;top: 125px;width: 247px;height: 15px;" title="month, a $250.00 fine is assessed.">month, a $250.00 fine is assessed.</div>
-			<div class="rect" style="left: 27px;top: 167px;width: 489px;height: 18px;" title="Name: John Phillips
-Phone: (123) 456-7890">Name: John Phillips
-Phone: (123) 456-7890</div>
+			<div class="rect" style="left: 27px;top: 167px;width: 489px;height: 18px;" title="Name: John Phillips			Phone: (123) 456-7890">Name: John Phillips			Phone: (123) 456-7890</div>
 			<div class="rect" style="left: 27px;top: 187px;width: 488px;height: 15px;" title="Address 123 Main Street CC Number: XXXXXXXXXXXX1234">Address 123 Main Street CC Number: XXXXXXXXXXXX1234</div>
-			<div class="rect" style="left: 27px;top: 207px;width: 489px;height: 15px;" title="San Francisco. CA12345
-Bill Received: 01/16/1968">San Francisco. CA12345
-Bill Received: 01/16/1968</div>
+			<div class="rect" style="left: 27px;top: 207px;width: 489px;height: 15px;" title="San Francisco. CA12345			Bill Received: 01/16/1968">San Francisco. CA12345			Bill Received: 01/16/1968</div>
 			<div class="rect" style="left: 27px;top: 242px;width: 218px;height: 20px;" title="Your Transactions">Your Transactions</div>
-			<div class="rect" style="left: 28px;top: 285px;width: 488px;height: 16px;" title="Item
-Price">Item
-Price</div>
-			<div class="rect" style="left: 27px;top: 318px;width: 486px;height: 17px;" title="The ABC Store - Cookies
-$2.81">The ABC Store - Cookies
-$2.81</div>
-			<div class="rect" style="left: 28px;top: 342px;width: 488px;height: 22px;" title="Orville&#39;s Bakery - Donuts
-$5.95">Orville&#39;s Bakery - Donuts
-$5.95</div>
-			<div class="rect" style="left: 28px;top: 369px;width: 488px;height: 18px;" title="Stan&#39;s Gas Station -10 Gallons of Gas
-$40.00">Stan&#39;s Gas Station -10 Gallons of Gas
-$40.00</div>
+			<div class="rect" style="left: 28px;top: 285px;width: 488px;height: 16px;" title="Item			Price">Item			Price</div>
+			<div class="rect" style="left: 27px;top: 318px;width: 486px;height: 17px;" title="The ABC Store - Cookies			$2.81">The ABC Store - Cookies			$2.81</div>
+			<div class="rect" style="left: 28px;top: 342px;width: 488px;height: 22px;" title="Orville&#39;s Bakery - Donuts			$5.95">Orville&#39;s Bakery - Donuts			$5.95</div>
+			<div class="rect" style="left: 28px;top: 369px;width: 488px;height: 18px;" title="Stan&#39;s Gas Station -10 Gallons of Gas			$40.00">Stan&#39;s Gas Station -10 Gallons of Gas			$40.00</div>
 			<div class="rect" style="left: 406px;top: 406px;width: 110px;height: 17px;" title="Total: $48.76">Total: $48.76</div>
 		</div>
 		<style>
@@ -41,10 +29,16 @@ $40.00</div>
 				position: relative;
 			}
 
+			.container img {
+				pointer-events: none;
+				user-select: none;
+			}
+
 			.rect {
 				position: absolute;
-				outline: 3px solid red;
-				color: hsl(0 0 0 / 0.01);
+				outline: 3px solid hsl(0deg 100% 50%);
+				color: hsl(0deg 0% 0% / 0.01);
+				white-space: pre-wrap;
 			}
 		</style>
 	</body>

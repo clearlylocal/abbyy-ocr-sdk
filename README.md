@@ -11,6 +11,7 @@
   - [saveAsTxt.ts](./src/saveAsTxt.ts): Basic example using `OcrSdk`'s `ocr` method to get a text file of the OCRed content
   - [createImageMap.ts](./src/createImageMap.ts): Slightly more involved example that gets XML content, then converts it to a hoverable HTML image map based on the text data and coordinates of each line
   - [types.ts](./src/types.ts): TypeScript types for interacting with `OcrSdk`
+  - [saveAsTxt.node.mjs](./src/saveAsTxt.node.mjs): JavaScript/NodeJS version of `saveAsTxt.ts`
 - `samples/`
   - [ocr-sample.jpg](./samples/ocr-sample.jpg): An example input image file
   - [result.txt](./samples/result.txt): Result of running `main.ts` on `ocr-sample.jpg`

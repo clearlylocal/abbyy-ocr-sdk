@@ -1,9 +1,13 @@
-import { completedTaskStatuses } from './types.ts'
-import { ongoingTaskStatuses } from './types.ts'
-import { OngoingTaskStatus } from './types.ts'
-import { CompletedTaskStatus } from './types.ts'
-import { taskStatuses } from './types.ts'
-import type { CompletedTask, ImageProcessingSettings, OcrSdkOptions, OngoingTask, Task } from './types.ts'
+import { completedTaskStatuses, ongoingTaskStatuses, taskStatuses } from './types.ts'
+import type {
+	CompletedTask,
+	CompletedTaskStatus,
+	ImageProcessingSettings,
+	OcrSdkOptions,
+	OngoingTask,
+	OngoingTaskStatus,
+	Task,
+} from './types.ts'
 
 const defaultOptions: OcrSdkOptions = {
 	waitTimeout: 2000,
@@ -30,7 +34,7 @@ export class OcrSdk {
 
 	/**
 	 * To obtain an application ID and password, register at https://cloud.ocrsdk.com/Account/Register
-	 * More info on getting your application id and password at https://ocrsdk.com/documentation/faq/#faq3
+	 * More info on getting your application id and password at https://support.abbyy.com/hc/en-us/articles/360017270140-FAQ#application-id
 	 */
 	constructor(applicationId: string, password: string, serviceUrl: string, options?: Partial<OcrSdkOptions>) {
 		this.options = { ...defaultOptions, ...options }
