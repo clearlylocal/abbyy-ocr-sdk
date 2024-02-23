@@ -4,7 +4,9 @@ import type { Cheerio, CheerioAPI, Element } from 'cheerio'
 // https://support.abbyy.com/hc/en-us/articles/360017270080-Output-XML-document
 
 type RectType = 'paragraph' | 'line'
-export type ImageMapOptions = { rectType: RectType }
+export type ImageMapOptions = {
+	rectType: RectType
+}
 const defaultImageMapOptions: ImageMapOptions = {
 	rectType: 'paragraph',
 }
@@ -22,7 +24,7 @@ function getTexts($: CheerioAPI, rectType: RectType): PositionedText[] {
 			return [...$('par')].map((par) => {
 				const lines = [...$(par).find('line')].map((x) => getPositionedText($(x as Element), $))
 				return mergeLines(lines)
-			})
+			}).filter((x): x is PositionedText => Boolean(x))
 		}
 		case 'line': {
 			return [...$('line')].map((x) => getPositionedText($(x as Element), $))
@@ -30,9 +32,32 @@ function getTexts($: CheerioAPI, rectType: RectType): PositionedText[] {
 	}
 }
 
-function mergeLines(lines: PositionedText[]): PositionedText {
+const unspaced =
+	/[\p{Script_Extensions=Han}\p{Script_Extensions=Katakana}\p{Script_Extensions=Hiragana}！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？［＼］＾＿｀｛｜｝～]/u
+		.source
+
+function mergeLines(lines: PositionedText[]): PositionedText | null {
+	if (lines.length === 0) return null
+	if (lines.length === 1) return lines[0]
+
+	let allText = ''
+	for (const [idx, { text }] of lines.entries()) {
+		if (idx === 0) allText += text
+		else {
+			const prevChar = allText.match(/.$/u)?.[0]
+			if (
+				prevChar && new RegExp(`${unspaced}$`, 'u').test(prevChar) ||
+				new RegExp(`^${unspaced}`, 'u').test(text)
+			) {
+				allText += text
+			} else {
+				allText += ` ${text}`
+			}
+		}
+	}
+
 	return lines.length === 1 ? lines[0] : {
-		text: lines.map((l) => l.text).join(' '),
+		text: allText,
 		rect: mergeRects(lines.map((l) => l.rect)),
 	}
 }
