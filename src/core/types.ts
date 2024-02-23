@@ -2,35 +2,6 @@ export type OcrSdkOptions = {
 	waitTimeout: number
 }
 
-export type ImageProcessingSettings = {
-	languages: Language[]
-	exportFormat: ExportFormat
-}
-
-export type Task = {
-	id: string
-	status: TaskStatus
-	resultUrl?: string
-	resultUrls?: string[]
-	error?: string
-	registrationTime?: Date
-	statusChangeTime?: Date
-	filesCount?: number
-	credits?: number
-}
-
-export type CompletedTask = Expand<
-	Task & Required<Pick<Task, 'resultUrl' | 'resultUrls'>> & {
-		status: CompletedTaskStatus
-	}
->
-
-export type OngoingTask = Expand<
-	Omit<Task, 'resultUrl' | 'resultUrls'> & {
-		status: OngoingTaskStatus
-	}
->
-
 export const taskStatuses = [
 	'Submitted',
 	'Queued',
@@ -43,12 +14,75 @@ export const taskStatuses = [
 export const completedTaskStatuses = ['Completed'] satisfies TaskStatus[]
 export const ongoingTaskStatuses = ['Queued', 'InProgress'] satisfies TaskStatus[]
 
-// https://support.abbyy.com/hc/en-us/articles/360017269940-Task-statuses
+export type Task = {
+	id: string
+	status: TaskStatus
+	resultUrls?: string[]
+	error?: string
+	registrationTime?: Date
+	statusChangeTime?: Date
+	filesCount?: number
+	credits?: number
+}
+
+export type CompletedTask = Expand<
+	Task & Required<Pick<Task, 'resultUrls'>> & {
+		status: CompletedTaskStatus
+	}
+>
+
+export type OngoingTask = Expand<
+	Omit<Task, 'resultUrls'> & {
+		status: OngoingTaskStatus
+	}
+>
+
+/** https://support.abbyy.com/hc/en-us/articles/360017269940-Task-statuses */
 export type TaskStatus = typeof taskStatuses[number]
 export type CompletedTaskStatus = typeof completedTaskStatuses[number]
 export type OngoingTaskStatus = typeof ongoingTaskStatuses[number]
 
-// https://support.abbyy.com/hc/en-us/articles/360017269680-processImage-Method
+/** https://support.abbyy.com/hc/en-us/articles/360017269680-processImage-Method */
+export type ImageProcessingSettings<T extends ExportFormat> = Expand<
+	& {
+		languages: readonly Language[]
+		exportFormats: readonly [T] | readonly [T, T] | readonly [T, T, T]
+	}
+	& Partial<{
+		profile: Profile
+		textType: TextType
+		imageSource: ImageSource
+		correctOrientation: boolean
+		correctSkew: boolean
+		readBarcodes: boolean
+		pdfPassword: string
+	}>
+	& Partial<Prefixed<T, FormatSpecificSettings>>
+>
+
+type GetPrefix<T extends string> = T extends `${infer Prefix}:${string}` ? Prefix : never
+type Prefixed<T extends string, S> = { [K in string & keyof S]: T extends `${GetPrefix<K>}${string}` ? S[K] : never }
+
+type FormatSpecificSettings = {
+	'xml:writeFormatting': boolean
+	'xml:writeRecognitionVariants': boolean
+	'xml:writeWordRecognitionVariants': boolean
+
+	'pdf:writeTags': 'auto' | 'write' | 'dontWrite'
+
+	'txtUnstructured:paragraphAsOneLine': boolean
+}
+
+/** https://support.abbyy.com/hc/en-us/articles/360017326839-Processing-profiles */
+export type Profile = 'documentConversion' | 'documentArchiving' | 'textExtraction' | 'barcodeRecognition'
+/** https://support.abbyy.com/hc/en-us/articles/360017326879-Text-types */
+export type TextType = 'normal' | 'typewriter' | 'matrix' | 'index' | 'ocrA' | 'ocrB' | 'e13b' | 'cmc7' | 'gothic'
+export type ImageSource = 'auto' | 'photo' | 'scanner'
+
+/**
+ * More details at https://support.abbyy.com/hc/en-us/articles/360017269680-processImage-Method.
+ * Maximum of 3 export formats per task
+ */
 export type ExportFormat =
 	| 'txt'
 	| 'txtUnstructured'
@@ -63,7 +97,7 @@ export type ExportFormat =
 	| 'xmlForCorrectedImage'
 	| 'alto'
 
-// https://support.abbyy.com/hc/en-us/articles/360017326859-Recognition-languages
+/** https://support.abbyy.com/hc/en-us/articles/360017326859-Recognition-languages */
 export type Language =
 	| 'Abkhaz'
 	| 'Adyghe'

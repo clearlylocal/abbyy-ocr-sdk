@@ -1,14 +1,13 @@
 {
 	"lock": false,
 	"tasks": {
-		"save-as-txt": "deno run -A --watch src/saveAsTxt.ts",
-		"create-image-map": "deno run -A --watch src/createImageMap.ts",
-		"save-as-txt-nodejs": "./src/saveAsTxt.node.mjs",
-		"update-git-hash": "deno run -A --watch ./scripts/updateGitHash.ts"
+		"convert-image": "deno run -A --watch src/examples/convertImage.ts",
+		"html-image-map": "deno run -A --watch src/examples/htmlImageMap.ts"
 	},
 	"imports": {
 		"std/": "https://deno.land/std@0.208.0/",
-		"cheerio": "https://esm.sh/v131/cheerio@1.0.0-rc.12"
+		"cheerio": "https://esm.sh/v131/cheerio@1.0.0-rc.12",
+		"xml-formatter": "https://esm.sh/v135/xml-formatter@3.6.2"
 	},
 	"fmt": {
 		"semiColons": false,

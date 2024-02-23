@@ -2,6 +2,7 @@ import { completedTaskStatuses, ongoingTaskStatuses, taskStatuses } from './type
 import type {
 	CompletedTask,
 	CompletedTaskStatus,
+	ExportFormat,
 	ImageProcessingSettings,
 	OcrSdkOptions,
 	OngoingTask,
@@ -13,17 +14,15 @@ const defaultOptions: OcrSdkOptions = {
 	waitTimeout: 2000,
 }
 
-const defaultImageProcessingSettings: ImageProcessingSettings = {
-	languages: ['English'],
-	exportFormat: 'txt',
-}
-
+type QueryParamMap = Partial<Record<string, string | boolean>>
 type GetTaskParams = [
 	method: 'GET' | 'POST',
 	urlPath: string,
-	queryParams?: Record<string, string>,
+	queryParams?: QueryParamMap,
 	body?: BodyInit | null | undefined,
 ]
+
+type ImageBinary = Blob | BufferSource | ReadableStream<Uint8Array>
 
 export class OcrSdk {
 	public options: OcrSdkOptions
@@ -48,14 +47,13 @@ export class OcrSdk {
 	 * OCR an image via the ABBYY Cloud OCR API
 	 *
 	 * @param image Binary data of image to be processed
-	 * @param settings Settings for processing the image
-	 *
-	 * @returns Binary data of the output file, in the format specified by `settings.exportFormat` (default: `txt`)
+	 * @param settings Image processing settings
+	 * @returns Binary data of the output file, in the format specified by `settings.exportFormat`
 	 */
-	async ocr(image: Uint8Array, settings?: Partial<ImageProcessingSettings>) {
+	async ocr<T extends ExportFormat>(image: ImageBinary, settings: ImageProcessingSettings<T>) {
 		const task = await this.#initOcrTask(image, settings)
 		const result = await this.#waitForCompletion(task)
-		return this.#getResult(result)
+		return this.#getResults(result, settings.exportFormats)
 	}
 
 	/**
@@ -65,10 +63,11 @@ export class OcrSdk {
 	 * @param settings Image processing settings
 	 * @returns Queued task
 	 */
-	#initOcrTask(image: Uint8Array, settings?: Partial<ImageProcessingSettings>) {
-		const { languages, ...otherSettings } = { ...defaultImageProcessingSettings, ...settings }
-		const params = { ...otherSettings, language: languages.join(',') }
+	#initOcrTask<T extends ExportFormat>(image: ImageBinary, settings: ImageProcessingSettings<T>) {
+		const { languages, exportFormats, ...otherSettings } = settings
+		const params = { ...otherSettings, language: languages.join(','), exportFormat: exportFormats.join(',') }
 
+		// https://support.abbyy.com/hc/en-us/articles/360017269680-processImage-Method
 		return this.#getTaskFromEndpoint('POST', 'processImage', params, image)
 	}
 
@@ -78,6 +77,7 @@ export class OcrSdk {
 	 * @returns Task with updated status
 	 */
 	#getTaskStatus(task: Task) {
+		// https://support.abbyy.com/hc/en-us/articles/360017269860-getTaskStatus-Method
 		return this.#getTaskFromEndpoint('GET', 'getTaskStatus', { taskId: task.id })
 	}
 
@@ -104,35 +104,45 @@ export class OcrSdk {
 	}
 
 	/** Get result of document processing of a completed task */
-	async #getResult(task: CompletedTask) {
-		const res = await fetch(task.resultUrl)
-		return new Uint8Array(await res.arrayBuffer())
+	async #getResults<T extends ExportFormat>(task: CompletedTask, exportFormats: readonly T[]) {
+		return Object.fromEntries(
+			await Promise.all(task.resultUrls.map(async (resultUrl, idx) => {
+				const res = await fetch(resultUrl)
+				const contentType = res.headers.get('Content-Type')
+				const lastModified = res.headers.get('Last-Modified')
+
+				const file = new File([await res.arrayBuffer()], new URL(resultUrl).pathname.split('/').at(-1)!, {
+					type: contentType ?? undefined,
+					lastModified: lastModified ? new Date(lastModified).valueOf() : undefined,
+				})
+
+				return [exportFormats[idx], file] as const
+			})),
+		) as Record<T, File>
 	}
 
 	#hydrateTask(obj: Record<string, unknown>) {
-		const task: Record<string, unknown> = {}
+		const task: Partial<Task> = {}
 
 		if (obj.taskId != null) task.id = String(obj.taskId)
-		if (obj.status != null) task.status = String(obj.status)
+		if (obj.status != null) task.status = String(obj.status) as Task['status']
 		if (obj.error != null) task.error = String(obj.error)
 		if (obj.registrationTime != null) task.registrationTime = new Date(String(obj.registrationTime))
 		if (obj.statusChangeTime != null) task.statusChangeTime = new Date(String(obj.statusChangeTime))
 		if (obj.filesCount != null) task.filesCount = Number(obj.filesCount)
 		if (obj.credits != null) task.credits = Number(obj.credits)
-
-		if (Array.isArray(obj.resultUrls)) {
-			task.resultUrls = obj.resultUrls
-			task.resultUrl = obj.resultUrls[0]
-		}
+		if (Array.isArray(obj.resultUrls)) task.resultUrls = obj.resultUrls.map(String)
 
 		assertIsTask(task)
 
 		return task
 	}
 
-	#getUrl(urlPath: string) {
+	#getApiUrl(path: string, queryParams?: QueryParamMap) {
 		// https://support.abbyy.com/hc/en-us/sections/360004931659-API-v2-JSON-version
-		return new URL(['v2', urlPath].join('/'), this.#serviceUrl)
+		const url = new URL(['v2', path].join('/'), this.#serviceUrl)
+		for (const [k, v] of Object.entries(queryParams ?? {})) url.searchParams.set(k, String(v))
+		return url
 	}
 
 	#getHttpHeaders() {
@@ -143,8 +153,7 @@ export class OcrSdk {
 
 	/** Send request to the API with given method, path, parameters, and body, returning task data */
 	async #getTaskFromEndpoint(...[method, urlPath, queryParams, body]: GetTaskParams): Promise<Task> {
-		const url = this.#getUrl(urlPath)
-		url.search = new URLSearchParams(Object.entries(queryParams ?? {})).toString()
+		const url = this.#getApiUrl(urlPath, queryParams)
 
 		const res = await fetch(url, { method, headers: this.#getHttpHeaders(), body })
 
@@ -165,9 +174,9 @@ function assertIsTask(data: unknown): asserts data is Task {
 }
 
 function assertIsCompleted(task: Task): asserts task is CompletedTask {
-	const { status, resultUrl, resultUrls } = task
+	const { status, resultUrls } = task
 
-	if (resultUrl == null || resultUrls == null || !completedTaskStatuses.includes(status as CompletedTaskStatus)) {
+	if (resultUrls == null || !completedTaskStatuses.includes(status as CompletedTaskStatus)) {
 		throw new TypeError(`Invalid completed task data: ${JSON.stringify(task)}`)
 	}
 }
