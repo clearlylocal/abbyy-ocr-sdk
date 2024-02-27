@@ -32,9 +32,10 @@ function getTexts($: CheerioAPI, rectType: RectType): PositionedText[] {
 	}
 }
 
-const unspaced =
-	/[\p{Script_Extensions=Han}\p{Script_Extensions=Katakana}\p{Script_Extensions=Hiragana}！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？［＼］＾＿｀｛｜｝～]/u
-		.source
+const nonSpaceDelimitedScripts = ['Han', 'Hiragana', 'Katakana', 'Thai', 'Khmer', 'Lao', 'Myanmar', 'Javanese'] as const
+const nonSpaceDelimitedExts = nonSpaceDelimitedScripts.map((x) => `\\p{Script_Extensions=${x}}` as const)
+const fullWidthPunct = `！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？［＼］＾＿｀｛｜｝～` as const
+const nonSpaceDelimited = `[${nonSpaceDelimitedExts.join('')}${fullWidthPunct}]`
 
 function mergeLines(lines: PositionedText[]): PositionedText | null {
 	if (lines.length === 0) return null
@@ -46,8 +47,8 @@ function mergeLines(lines: PositionedText[]): PositionedText | null {
 		else {
 			const prevChar = allText.match(/.$/u)?.[0]
 			if (
-				prevChar && new RegExp(`${unspaced}$`, 'u').test(prevChar) ||
-				new RegExp(`^${unspaced}`, 'u').test(text)
+				prevChar && new RegExp(`${nonSpaceDelimited}$`, 'u').test(prevChar) ||
+				new RegExp(`^${nonSpaceDelimited}`, 'u').test(text)
 			) {
 				allText += text
 			} else {
