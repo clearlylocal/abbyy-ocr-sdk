@@ -1,0 +1,103 @@
+{
+	"texts": [
+		{
+			"text": "Credit Card Bill",
+			"rect": {
+				"l": 133,
+				"t": 45,
+				"b": 77,
+				"r": 412
+			}
+		},
+		{
+			"text": "This is a bill in which you have to pay. If you do not pay within one (1) month, a $250.00 fine is assessed.",
+			"rect": {
+				"l": 28,
+				"t": 104,
+				"b": 140,
+				"r": 519
+			}
+		},
+		{
+			"text": "Name: John Phillips\tPhone: (123) 456-7890",
+			"rect": {
+				"l": 27,
+				"t": 167,
+				"b": 185,
+				"r": 516
+			}
+		},
+		{
+			"text": "Address 123 Main Street CC Number: XXXXXXXXXXXX1234",
+			"rect": {
+				"l": 27,
+				"t": 187,
+				"b": 202,
+				"r": 515
+			}
+		},
+		{
+			"text": "San Francisco. CA12345\tBill Received: 01/16/1968",
+			"rect": {
+				"l": 27,
+				"t": 207,
+				"b": 222,
+				"r": 516
+			}
+		},
+		{
+			"text": "Your Transactions",
+			"rect": {
+				"l": 27,
+				"t": 242,
+				"b": 262,
+				"r": 245
+			}
+		},
+		{
+			"text": "Item\tPrice",
+			"rect": {
+				"l": 28,
+				"t": 285,
+				"b": 301,
+				"r": 516
+			}
+		},
+		{
+			"text": "The ABC Store - Cookies\t$2.81",
+			"rect": {
+				"l": 27,
+				"t": 318,
+				"b": 335,
+				"r": 513
+			}
+		},
+		{
+			"text": "Orville's Bakery - Donuts\t$5.95",
+			"rect": {
+				"l": 28,
+				"t": 342,
+				"b": 364,
+				"r": 516
+			}
+		},
+		{
+			"text": "Stan's Gas Station -10 Gallons of Gas\t$40.00",
+			"rect": {
+				"l": 28,
+				"t": 369,
+				"b": 387,
+				"r": 516
+			}
+		},
+		{
+			"text": "Total: $48.76",
+			"rect": {
+				"l": 406,
+				"t": 406,
+				"b": 423,
+				"r": 516
+			}
+		}
+	]
+}

@@ -2,7 +2,8 @@
 	"lock": false,
 	"tasks": {
 		"convert-image": "deno run -A --watch src/examples/convertImage.ts",
-		"html-image-map": "deno run -A --watch src/examples/htmlImageMap.ts"
+		"html-image-map": "deno run -A --watch src/examples/htmlImageMap.ts",
+		"json-image-map": "deno run -A --watch src/examples/jsonImageMap.ts"
 	},
 	"imports": {
 		"std/": "https://deno.land/std@0.208.0/",
