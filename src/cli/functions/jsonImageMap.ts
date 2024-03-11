@@ -12,7 +12,7 @@ type Options = {
 	languages: Language[]
 }
 
-export async function htmlImageMap(imagePath: string, options: Options) {
+export async function jsonImageMap(imagePath: string, options: Options) {
 	const { applicationId, password, serviceUrl, languages } = options
 
 	const imageFileName = basename(imagePath)
@@ -33,7 +33,7 @@ export async function htmlImageMap(imagePath: string, options: Options) {
 		{ rectType: 'paragraph' },
 	)
 
-	const outPath = join(dirName, `${bareFileName}-image-map.html`)
+	const outPath = join(dirName, `${bareFileName}-image-map.json`)
 
 	await Deno.writeTextFile(outPath, JSON.stringify(map, null, '\t') + '\n')
 

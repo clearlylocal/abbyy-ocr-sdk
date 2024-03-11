@@ -21,13 +21,15 @@ export function imageMap(xml: string, options?: Partial<ImageMapOptions>): Image
 function getTexts($: CheerioAPI, rectType: RectType): PositionedText[] {
 	switch (rectType) {
 		case 'paragraph': {
-			return [...$('par')].map((par) => {
-				const lines = [...$(par).find('line')].map((x) => getPositionedText($(x as Element), $))
-				return mergeLines(lines)
-			}).filter((x): x is PositionedText => Boolean(x))
+			return [...$('par')].flatMap((par) => {
+				const linesGroups = [...$(par).find('line')].map((x) => getPositionedTexts($(x as Element), $))
+
+				return linesGroups.every((g) => g.length === 1) ? mergeLines(linesGroups.flat()) : linesGroups.flat()
+			})
+				.filter((x): x is PositionedText => Boolean(x))
 		}
 		case 'line': {
-			return [...$('line')].map((x) => getPositionedText($(x as Element), $))
+			return [...$('line')].flatMap((x) => getPositionedTexts($(x as Element), $))
 		}
 	}
 }
@@ -100,21 +102,29 @@ type Rect = {
 	b: number
 }
 
-function getPositionedText($x: Cheerio<Element>, $: CheerioAPI): PositionedText {
-	const l = Number($x.attr('l'))
-	const t = Number($x.attr('t'))
-	const b = Number($x.attr('b'))
-	const r = Number($x.attr('r'))
+/**
+ * @param $line - XML `<line>` element
+ * @param $ - Cheerio context
+ */
+function getPositionedTexts($line: Cheerio<Element>, $: CheerioAPI): PositionedText[] {
+	const l = Number($line.attr('l'))
+	const t = Number($line.attr('t'))
+	const b = Number($line.attr('b'))
+	const r = Number($line.attr('r'))
 
-	const text = [...$x.find('charParams')]
-		.map((c) => {
-			const $c = $(c)
-			if ($c.attr('isTab')) return '\t'
+	const positionedTexts = [{ text: '', rect: { l, t, b, r } }]
 
-			return $c.text()
-		})
-		.join('')
-		.trim()
+	for (const c of $line.find('charParams')) {
+		const $c = $(c)
+		const positionedText = positionedTexts.at(-1)!
 
-	return { text, rect: { l, t, b, r } }
+		if ($c.attr('isTab')) {
+			positionedText.rect.r = Number($c.attr('l'))
+			positionedTexts.push({ text: '', rect: { l: Number($c.attr('r')), t, b, r } })
+		} else {
+			positionedText.text += $c.text()
+		}
+	}
+
+	return positionedTexts
 }

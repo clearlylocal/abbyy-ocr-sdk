@@ -1,6 +1,7 @@
 import { Command, EnumType } from 'cliffy/command/mod.ts'
 import { convertImage } from './functions/convertImage.ts'
 import { htmlImageMap } from './functions/htmlImageMap.ts'
+import { jsonImageMap } from './functions/jsonImageMap.ts'
 import { exportFormats, languages } from '../core/types.ts'
 
 const ocrSdkParams = {
@@ -51,7 +52,7 @@ const json = new Command()
 			...ocrSdkParams,
 			languages: params.language ?? ['English'],
 		}
-		await htmlImageMap(path, options)
+		await jsonImageMap(path, options)
 	})
 
 await new Command()

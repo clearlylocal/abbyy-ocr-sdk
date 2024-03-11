@@ -19,9 +19,18 @@
 			}
 		},
 		{
-			"text": "Name: John Phillips\tPhone: (123) 456-7890",
+			"text": "Name: John Phillips",
 			"rect": {
 				"l": 27,
+				"t": 167,
+				"b": 185,
+				"r": 166
+			}
+		},
+		{
+			"text": "Phone: (123) 456-7890",
+			"rect": {
+				"l": 354,
 				"t": 167,
 				"b": 185,
 				"r": 516
@@ -37,9 +46,18 @@
 			}
 		},
 		{
-			"text": "San Francisco. CA12345\tBill Received: 01/16/1968",
+			"text": "San Francisco. CA12345",
 			"rect": {
 				"l": 27,
+				"t": 207,
+				"b": 222,
+				"r": 205
+			}
+		},
+		{
+			"text": "Bill Received: 01/16/1968",
+			"rect": {
+				"l": 338,
 				"t": 207,
 				"b": 222,
 				"r": 516
@@ -55,36 +73,72 @@
 			}
 		},
 		{
-			"text": "Item\tPrice",
+			"text": "Item",
 			"rect": {
 				"l": 28,
+				"t": 285,
+				"b": 301,
+				"r": 65
+			}
+		},
+		{
+			"text": "Price",
+			"rect": {
+				"l": 472,
 				"t": 285,
 				"b": 301,
 				"r": 516
 			}
 		},
 		{
-			"text": "The ABC Store - Cookies\t$2.81",
+			"text": "The ABC Store - Cookies",
 			"rect": {
 				"l": 27,
+				"t": 318,
+				"b": 335,
+				"r": 242
+			}
+		},
+		{
+			"text": "$2.81",
+			"rect": {
+				"l": 468,
 				"t": 318,
 				"b": 335,
 				"r": 513
 			}
 		},
 		{
-			"text": "Orville's Bakery - Donuts\t$5.95",
+			"text": "Orville's Bakery - Donuts",
 			"rect": {
 				"l": 28,
+				"t": 342,
+				"b": 364,
+				"r": 238
+			}
+		},
+		{
+			"text": "$5.95",
+			"rect": {
+				"l": 468,
 				"t": 342,
 				"b": 364,
 				"r": 516
 			}
 		},
 		{
-			"text": "Stan's Gas Station -10 Gallons of Gas\t$40.00",
+			"text": "Stan's Gas Station -10 Gallons of Gas",
 			"rect": {
 				"l": 28,
+				"t": 369,
+				"b": 387,
+				"r": 357
+			}
+		},
+		{
+			"text": "$40.00",
+			"rect": {
+				"l": 457,
 				"t": 369,
 				"b": 387,
 				"r": 516
