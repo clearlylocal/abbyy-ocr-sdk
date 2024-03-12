@@ -37,9 +37,18 @@
 			}
 		},
 		{
-			"text": "Address 123 Main Street CC Number: XXXXXXXXXXXX1234",
+			"text": "Address 123 Main Street",
 			"rect": {
 				"l": 27,
+				"t": 187,
+				"b": 202,
+				"r": 200
+			}
+		},
+		{
+			"text": "CC Number: XXXXXXXXXXXX1234",
+			"rect": {
+				"l": 263,
 				"t": 187,
 				"b": 202,
 				"r": 515
