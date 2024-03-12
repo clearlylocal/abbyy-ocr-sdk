@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <document xmlns="http://www.abbyy.com/FineReader_xml/FineReader10-schema-v1.xml" version="1.0" producer="ABBYY FineReader Engine 12" languages="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.abbyy.com/FineReader_xml/FineReader10-schema-v1.xml http://www.abbyy.com/FineReader_xml/FineReader10-schema-v1.xml">
 	<page width="548" height="515" resolution="96" originalCoords="1">
+		<block blockType="Picture" blockName="cl:original-image">
+			<pictureFile path="ocr-sample.jpg"/>
+		</block>
 		<block blockType="Text" blockName="" l="132" t="43" r="416" b="80">
 			<region>
 				<rect l="132" t="43" r="193" b="44"/>

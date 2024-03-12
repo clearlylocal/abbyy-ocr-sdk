@@ -107,15 +107,6 @@ function mergeLines(lines: PositionedText[]): PositionedText | null {
 	}
 }
 
-function mergeRects(rects: Rect[]): Rect {
-	return {
-		l: Math.min(...rects.map((r) => r.l)),
-		t: Math.min(...rects.map((r) => r.t)),
-		b: Math.max(...rects.map((r) => r.b)),
-		r: Math.max(...rects.map((r) => r.r)),
-	}
-}
-
 function getRect($el: $PositionedElement): Rect {
 	const l = Number($el.attr('l'))
 	const t = Number($el.attr('t'))
@@ -123,6 +114,15 @@ function getRect($el: $PositionedElement): Rect {
 	const r = Number($el.attr('r'))
 
 	return { l, t, b, r }
+}
+
+function mergeRects(rects: Rect[]): Rect {
+	return {
+		l: Math.min(...rects.map((r) => r.l)),
+		t: Math.min(...rects.map((r) => r.t)),
+		b: Math.max(...rects.map((r) => r.b)),
+		r: Math.max(...rects.map((r) => r.r)),
+	}
 }
 
 function getAspectRatio($el: $PositionedElement) {
@@ -137,14 +137,14 @@ function getText($char: $PositionedElement) {
 	if ($char.attr('isTab')) return '\t'
 
 	const text = $char.text()
-	const isSoftTab = !/\S/.test(text) && getAspectRatio($char) > 2.5
+	const isSoftTab = text.trim() === '' && getAspectRatio($char) > 2.5
 
 	return isSoftTab ? '\t' : text
 }
 
 /**
- * @param $line - XML `<line>` element
  * @param $ - Cheerio context
+ * @param $line - XML `<line>` element
  */
 function getPositionedTexts($: CheerioAPI, $line: $PositionedElement): PositionedText[] {
 	const { l, t, b, r } = getRect($line)

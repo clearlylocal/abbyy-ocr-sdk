@@ -31,7 +31,16 @@ export async function convertImage(imagePath: string, options: Options) {
 
 	for (const [ext, file] of Object.entries(outputs)) {
 		let text = new TextDecoder().decode(await file.arrayBuffer()).replaceAll('\r\n', '\n')
-		if (file.type === 'application/xml') text = prettifyXml(text)
+
+		if (file.type === 'application/xml') {
+			const { load } = await import('cheerio')
+			const $ = load(text, { xml: true })
+			const $block = $('<block blockType="Picture" blockName="cl:original-image"><pictureFile /></block>')
+			$block.find('pictureFile').attr('path', imageFileName)
+			$block.insertBefore($('page').eq(0).find('block').eq(0))
+
+			text = prettifyXml($.xml())
+		}
 
 		const outPath = join(dirName, `${bareFileName}-result.${ext}`)
 		await Deno.writeTextFile(outPath, text)

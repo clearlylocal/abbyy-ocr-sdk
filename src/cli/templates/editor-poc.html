@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>{{title}}</title>
+		<style>
+			body {
+				font-family: sans-serif;
+			}
+
+			.container {
+				position: relative;
+			}
+
+			.container img {
+				pointer-events: none;
+				user-select: none;
+			}
+
+			.rect {
+				--outline: 3px solid hsl(0deg 100% 50%);
+				position: absolute;
+				outline: var(--outline);
+				color: hsl(0deg 0% 0% / 0.01);
+				white-space: pre-wrap;
+			}
+
+			.rect-not-in-db {
+				outline-style: dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<form>
+				<label>ID <input name="id"></label>
+				<label>Source <input name="source"></label>
+				<label>Target <input name="target"></label>
+			</form>
+		</div>
+		{{image_map}}
+		<script type="module">
+			/** @param {string} source */
+			function emptySegment(source) {
+				return { id: '', source, target: '' }
+			}
+
+			// deno-fmt-ignore
+			const segments = [{"id":"018a826a-9556-4e49-8e1e-5c3d4638b9b6","source":"Credit Card Bill","target":"信用卡账单"},{"id":"da1ad12a-9f68-40e7-ae5c-a1aa5592c4b0","source":"This is a bill in which you have to pay. If you do not pay within one (1) month, a $250.00 fine is assessed.","target":"这是您必须支付的账单。如果您在一（1）个月内不支付，将被处以 250 美元的罚款。"},{"id":"20666478-5d77-4c8e-bcbc-95457ee9b2f9","source":"Name: John Phillips","target":"姓名： 约翰-菲利普斯约翰-菲利普斯"},{"id":"8ea9b176-4443-4eeb-a22c-f8ad84ae0c0b","source":"Phone: (123) 456-7890","target":"电话：(123) 456-7890"},{"id":"41778c35-b0d8-4c7a-861b-28d4ece8708d","source":"Address 123 Main Street CC Number: XXXXXXXXXXXX1234","target":"地址 123 Main Street CC 号码XXXXXXXXXXXX1234"},{"id":"28fc1b66-2a90-4c29-b634-274faed5032e","source":"San Francisco. CA12345","target":"旧金山。CA12345"},{"id":"198bdc4f-6e8b-46f8-a49e-ea39222a3559","source":"Bill Received: 01/16/1968","target":"收到账单：01/16/1968"},{"id":"d6a8c094-0d78-4eee-993c-29e67bfdaa83","source":"Your Transactions","target":"您的交易"},{"id":"c2479d68-ec2b-4c04-be6e-bd7f95df8a09","source":"Item","target":"项目"},{"id":"3c9d7c17-ce4d-45fc-83de-e2a34dddb28c","source":"Price","target":"价格"},{"id":"495fcf09-3c27-4256-8bdb-44ac8802ecb7","source":"The ABC Store - Cookies","target":"ABC 商店 - 饼干"},{"id":"198ba5bd-9a21-4920-b7d3-d652604a76eb","source":"$2.81","target":"$2.81"},{"id":"69b9e4aa-cdd0-4c24-918c-ac740cde29c7","source":"Orville's Bakery - Donuts","target":"奥维尔面包店 - 甜甜圈"},{"id":"565bcbf8-2c68-4fd3-a950-44e50bf1ce36","source":"$5.95","target":"$5.95"},{"id":"bdbe82cb-db4c-4610-9101-d72a92d4511f","source":"Stan's Gas Station -10 Gallons of Gas","target":"斯坦加油站 -10加仑汽油"},{"id":"d7c01193-f31c-4e49-bc8c-c61bbe352986","source":"$40.00","target":"$40.00"},{"id":"b05cd41a-afce-4654-9cee-0d3c427c5d52","source":"Total: $48.76","target":"共计：48.76 美元"}]
+
+			const segmentsBySource = Object.fromEntries(
+				segments.map((s) => [s.source, s])
+					// arbitrarily delete 1 in every 3 to simulate incomplete db data
+					.filter((_, i) => i % 3 !== 0)
+			)
+
+			for (const rect of document.querySelectorAll('.rect')) {
+				if (!segmentsBySource[rect.title]) {
+					rect.classList.add('rect-not-in-db')
+				}
+			}
+
+			document.querySelector('.container').addEventListener('click', (e) => {
+				if (e.target.matches('.rect')) {
+					/** @type {HTMLElement} */
+					const rect = e.target
+					const source = rect.title
+					const segment = segmentsBySource[source] ?? emptySegment(source)
+
+					document.querySelector('[name=id]').value = segment.id
+					document.querySelector('[name=source]').value = segment.source
+					document.querySelector('[name=target]').value = segment.target
+				}
+			})
+		</script>
+	</body>
+</html>

@@ -2,6 +2,14 @@ export type OcrSdkOptions = {
 	waitTimeout: number
 }
 
+export type ImageMapGenerationOptions = {
+	applicationId: string
+	password: string
+	serviceUrl: string
+
+	languages: Language[]
+}
+
 export const taskStatuses = [
 	'Submitted',
 	'Queued',

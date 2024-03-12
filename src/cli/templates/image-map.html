@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>{{title}}</title>
+		<style>
+			body {
+				font-family: sans-serif;
+			}
+		
+			.container {
+				position: relative;
+			}
+		
+			.container img {
+				pointer-events: none;
+				user-select: none;
+			}
+		
+			.rect {
+				position: absolute;
+				outline: 3px solid hsl(0deg 100% 50%);
+				color: hsl(0deg 0% 0% / 0.01);
+				white-space: pre-wrap;
+			}
+		</style>
+	</head>
+	<body>
+		{{image_map}}
+	</body>
+</html>

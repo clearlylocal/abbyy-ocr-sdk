@@ -1,4 +1,5 @@
 import formatXml from 'xml-formatter'
+import { escape, unescape } from 'std/html/entities.ts'
 
 export function prettifyXml(xml: string, indentation: string | number = '\t') {
 	// We add `xml:space="preserve"` to ensure whitespace within charParams is preserved, but then remove it at the end
@@ -7,6 +8,12 @@ export function prettifyXml(xml: string, indentation: string | number = '\t') {
 		indentation: typeof indentation === 'number' ? ' '.repeat(indentation) : indentation,
 		collapseContent: true,
 		lineSeparator: '\n',
-	}).replaceAll(/<charParams([^<]+)\s+xml:space="preserve">/g, '<charParams$1>').trim() +
+	}).replaceAll(/<charParams([^<]+)\s+xml:space="preserve">/g, '<charParams$1>')
+		// normalize entities
+		.replaceAll(/&[^;]+;/g, (m) => {
+			const val = unescape(m)
+			return val === "'" ? m : escape(val)
+		})
+		.trim() +
 		'\n'
 }

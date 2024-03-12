@@ -34,11 +34,13 @@ const convert = new Command()
 const html = new Command()
 	.type('language', new EnumType(languages))
 	.option(...language)
+	.option('-t, --template <type:file>', 'HTML template (default: image-map.html)', { required: false })
 	.arguments('<path:file>')
 	.action(async (params, path) => {
 		const options = {
 			...ocrSdkParams,
 			languages: params.language ?? ['English'],
+			template: params.template ?? './src/cli/templates/image-map.html',
 		}
 		await htmlImageMap(path, options)
 	})
