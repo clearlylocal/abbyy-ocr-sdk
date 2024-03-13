@@ -111,12 +111,8 @@ function getAllTexts($: CheerioAPI, rectType: RectType): PositionedText[] {
 	}
 }
 
-const nonSpaceDelimitedScripts = ['Han', 'Hiragana', 'Katakana', 'Thai', 'Khmer', 'Lao', 'Myanmar', 'Javanese'] as const
-const nonSpaceDelimitedExts = nonSpaceDelimitedScripts.map((x) => `\\p{Script_Extensions=${x}}` as const)
-const fullWidthPunct = '！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？［＼］＾＿｀｛｜｝～'
-const nonSpaceDelimitedPunct = '\\-/'
-const nonSpaceDelimited = `[${[...nonSpaceDelimitedExts, fullWidthPunct, nonSpaceDelimitedPunct].join('')}]` as const
-const nonSpaceDelimitedRe = new RegExp(nonSpaceDelimited, 'u')
+export const NON_SPACE_DELIMITED =
+	/[\-/\p{White_Space}\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Thai}\p{scx=Khmer}\p{scx=Lao}\p{scx=Myanmar}\p{scx=Javanese}！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？［＼］＾＿｀｛｜｝～]/u
 
 /**
  * Merge the text from multiple hard-wrapped lines, joining with or without a space, depending on whether the preceeding
@@ -139,7 +135,7 @@ export function mergeLineTexts(lines: string[]): string {
 		else {
 			const prevChar = text.match(/.$/u)?.[0] ?? ''
 			const nextChar = line.match(/^./u)?.[0] ?? ''
-			if (!nonSpaceDelimitedRe.test(prevChar) && !nonSpaceDelimitedRe.test(nextChar)) {
+			if (!NON_SPACE_DELIMITED.test(prevChar) && !NON_SPACE_DELIMITED.test(nextChar)) {
 				text += ' '
 			}
 			text += line
@@ -160,10 +156,10 @@ const mergeLines = mergeByStrategy(mergeLineTexts)
 const mergeTabs = mergeByStrategy((texts) => texts.join('\t'))
 
 function getRect($el: Cheerio<PositionedElement>): Rect {
-	const l = Number($el.attr('l'))
-	const t = Number($el.attr('t'))
-	const r = Number($el.attr('r'))
-	const b = Number($el.attr('b'))
+	const l = xs.integer($el, 'l')
+	const t = xs.integer($el, 't')
+	const r = xs.integer($el, 'r')
+	const b = xs.integer($el, 'b')
 
 	return new Rect({ l, t, r, b })
 }
@@ -173,10 +169,32 @@ function getAspectRatio($el: Cheerio<PositionedElement>): number {
 	return width / height
 }
 
+function attrMissing($el: Cheerio<Element>, attrName: string): never {
+	throw new TypeError(`Attribute ${attrName} missing on ${$el.prop('tagName')}`)
+}
+/** Parse attributes conforming to XML schema datatypes */
+const xs = {
+	/** [`xs:boolean`](https://www.w3.org/TR/xmlschema-2/#boolean) datatype */
+	boolean($el: Cheerio<Element>, attr: string, defaultVal?: boolean): boolean {
+		const val = $el.attr(attr)
+		return val && /^true|false|1|0$/.test(val) ? Boolean(JSON.parse(val)) : (defaultVal ?? attrMissing($el, attr))
+	},
+	/** [`xs:integer`](https://www.w3.org/TR/xmlschema-2/#integer) datatype */
+	integer($el: Cheerio<Element>, attr: string, defaultVal?: number): number {
+		const val = $el.attr(attr)
+		const int = val == null ? (defaultVal ?? attrMissing($el, attr)) : parseInt(val, 10)
+		assert(Number.isSafeInteger(int), `${int} is not a safe integer`)
+
+		return int
+	},
+}
+
 function getTextContent($char: Cheerio<PositionedElement>): string {
-	if ($char.attr('isTab')) return '\t'
+	if (xs.boolean($char, 'isTab', false)) return '\t'
 
 	const text = $char.text()
+
+	// if aspect ratio > 1 (width > height), we assume it's a tab
 	const isSoftTab = text.trim() === '' && getAspectRatio($char) > 1
 
 	return isSoftTab ? '\t' : text
@@ -198,8 +216,8 @@ function getTabDelimitedTexts($: CheerioAPI, $line: Cheerio<PositionedElement>):
 		const text = getTextContent($char)
 
 		if (text === '\t') {
-			positionedText.rect.r = Number($char.attr('l'))
-			texts.push({ text: '', rect: new Rect({ l: Number($char.attr('r')), t, r, b }) })
+			positionedText.rect.r = xs.integer($char, 'l')
+			texts.push({ text: '', rect: new Rect({ l: xs.integer($char, 'r'), t, r, b }) })
 		} else {
 			positionedText.text += text
 		}
