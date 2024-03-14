@@ -9,23 +9,26 @@ function makeHtml(imageFileName: string, imageMap: ImageMap, template: string, t
 	const { texts } = imageMap
 
 	return template
+		.replace(
+			/^<!DOCTYPE[^>]+>/i,
+			`$&\n<!-- Generated from template ${escape(templateName)} - do not edit directly -->`,
+		)
 		.replaceAll(/{{\s*title\s*}}/g, `Image map for ${escape(imageFileName)}`)
 		.replaceAll(/(^\s+)?{{\s*image_map\s*}}/gm, (_, p1: string | undefined) => {
 			const leadingSpace = p1 ?? ''
 
-			return `${leadingSpace}<div class="container">\n${
+			return `${leadingSpace}<div data-cl-image-map>\n${
 				leadingSpace + leadingSpace.charAt(0)
-			}<img draggable="false" src="${escape(imageFileName)}">\n${
+			}<img data-cl-img draggable="false" src="${escape(imageFileName)}">\n${
 				texts.map(({ text, rect: { l, t, b, r } }) => {
 					const rect = { left: l, top: t, width: r - l, height: b - t }
 
-					return `${leadingSpace + leadingSpace.charAt(0)}<div class="rect" style="${
+					return `${leadingSpace + leadingSpace.charAt(0)}<div data-cl-rect style="${
 						Object.entries(rect).map(([k, v]) => `${k}: ${v}px;`).join(' ')
-					}" title="${escape(text)}">${escape(text)}</div>`
+					}" title="${escape(text)}"><span data-cl-text>${escape(text)}</span></div>`
 				}).join('\n')
 			}\n${leadingSpace}</div>`
 		})
-		.replace(/^<!DOCTYPE[^>]+>/i, `$&\n<!-- Generated from template ${templateName} - do not edit directly -->`)
 }
 
 export async function htmlImageMap(filePath: string, options: ImageMapGenerationOptions & { template: string }) {

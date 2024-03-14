@@ -1,0 +1,71 @@
+body {
+	font-family: sans-serif;
+	tab-size: 4;
+}
+
+[data-cl-image-map] {
+	position: relative;
+}
+
+[data-cl-img] {
+	cursor: crosshair;
+}
+
+[data-cl-rect] {
+	--color: hsl(0deg 100% 50%);
+
+	outline-color: var(--color);
+	outline-width: 3px;
+	outline-style: solid;
+
+	position: absolute;
+	white-space: pre-wrap;
+	cursor: default;
+}
+
+:is([data-cl-num-db-matches]:not([data-cl-num-db-matches="1"]), [data-cl-user-added]) {
+	outline-style: dashed;
+}
+
+[data-cl-text] {
+	pointer-events: none;
+	user-select: none;
+	color: hsl(0deg 0% 0% / 0.01);
+}
+
+[data-cl-image-map]:not([data-cl-clicked]) [data-cl-rect]:hover {
+	background: color-mix(in srgb, var(--color) 35%, transparent);
+}
+
+[data-cl-current] {
+	--color: hsl(230deg 100% 55%);
+}
+
+form#segment-editor {
+	min-height: 1.5rem;
+}
+
+table#search-results {
+	table-layout: fixed;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+table#search-results :is(th, td) {
+    border: 2px solid hsl(0deg 0% 80% / 1);
+}
+
+table#search-results thead th {
+	text-align: left;
+	background-color: hsl(206deg 90% 55% / 0.5);
+}
+
+table#search-results tr.selected {
+	background-color: hsl(206deg 90% 55%);
+    color: white;
+    font-weight: bold;
+}
+
+table#search-results tr :is(th, td):nth-child(4) {
+	text-align: right;
+}
