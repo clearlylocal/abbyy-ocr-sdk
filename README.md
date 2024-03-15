@@ -1,5 +1,10 @@
 # Clearly Local ABBYY Cloud OCR SDK
 
+> [!IMPORTANT]
+> As of 2024-03-15, this repo is now archived, for reference only. For Clearly Local users, please see:
+> * New demo site at https://cl-tools.deno.dev/pages/easylt-ocr/samples/ocr-sample-editor-poc.html (requires Clearly Local Toolkit account)
+> * New repo at https://github.com/clearlylocal/easylt-ocr (requires Clearly Local GitHub access)
+
 ## Usage
 
 ### `OcrSdk` class
